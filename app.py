@@ -25,7 +25,6 @@ live_progress = {
     "email": None,
 }
 
-
 # Function to update progress
 def update_progress(email, pages_read):
     """Save the progress to a file."""
@@ -142,4 +141,5 @@ def dashboard():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Bind to all network interfaces and set port for production
+    app.run(host="0.0.0.0", port=8080)
