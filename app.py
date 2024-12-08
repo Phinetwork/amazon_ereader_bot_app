@@ -23,13 +23,14 @@ live_progress = {
     "status": "Idle",
     "pages_read": 0,
     "email": None,
+    "current_book": None,
 }
 
 # Store driver globally to reuse between requests
 driver = None
 
 # Function to update progress
-def update_progress(email, pages_read):
+def update_progress(email, pages_read, book):
     """Save the progress to a file."""
     progress_file = "progress.json"
 
@@ -42,7 +43,13 @@ def update_progress(email, pages_read):
             progress = {}
 
         # Update user's progress
-        progress[email] = progress.get(email, 0) + pages_read
+        if email not in progress:
+            progress[email] = {"total_pages": 0, "books_read": {}}
+
+        progress[email]["total_pages"] += pages_read
+        if book not in progress[email]["books_read"]:
+            progress[email]["books_read"][book] = 0
+        progress[email]["books_read"][book] += pages_read
 
         # Save updated progress back to the file
         with open(progress_file, "w") as f:
@@ -53,7 +60,7 @@ def update_progress(email, pages_read):
 
 
 # Function to simulate reading
-def simulate_reading(total_pages, delay_range, email):
+def simulate_reading(total_pages, delay_range, email, book):
     """Simulate reading by flipping pages one by one."""
     global live_progress, driver
     live_progress["status"] = "Reading"
@@ -61,19 +68,19 @@ def simulate_reading(total_pages, delay_range, email):
     try:
         for page in range(total_pages):
             live_progress["pages_read"] += 1
-            logging.info(f"Reading page {page + 1}")
-            
+            logging.info(f"Reading page {page + 1} of {book}")
+
             # Flip the page
             body = driver.find_element(By.TAG_NAME, "body")
             body.send_keys(Keys.RIGHT)
-            
+
             # Simulate delay
             delay = random.randint(*delay_range)
             logging.info(f"Waiting {delay} seconds before flipping to the next page...")
             time.sleep(delay)
 
             # Update progress after flipping each page
-            update_progress(email, 1)
+            update_progress(email, 1, book)
 
     except Exception as e:
         logging.error(f"Error encountered while reading: {e}")
@@ -123,7 +130,7 @@ def home():
             driver.get("https://read.amazon.com")
             logging.info("Opened Kindle Cloud Reader.")
 
-            # Notify user to manually log in
+            # Notify user to manually log in and select a book
             live_progress["status"] = "Waiting for manual login and book selection..."
             time.sleep(60)  # Allow the user to log in and select a book manually
 
@@ -154,14 +161,13 @@ def dashboard():
 
     # Display only current user's progress
     current_email = live_progress.get("email")
-    current_progress = progress.get(current_email, 0)
+    current_progress = progress.get(current_email, {"total_pages": 0, "books_read": {}})
 
     # Render the dashboard
     return render_template(
         "dashboard.html",
-        progress={current_email: current_progress} if current_email else {},
+        progress=current_progress,
         live_progress=live_progress,
-        current_progress=current_progress,
     )
 
 
@@ -172,9 +178,11 @@ def start_bot():
 
     if live_progress["email"] and driver:
         live_progress["status"] = "Starting Bot..."
+        current_book = "Sample Book Title"  # Logic to fetch selected book
+        live_progress["current_book"] = current_book
         threading.Thread(
             target=simulate_reading,
-            args=(10, (5, 10), live_progress["email"]),
+            args=(10, (5, 10), live_progress["email"], current_book),
         ).start()
     else:
         live_progress["status"] = "Error: Please log in and set up first."
