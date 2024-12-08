@@ -8,18 +8,23 @@
 <body>
     <h1>Amazon Reader Bot</h1>
     <form action="/" method="POST">
+        <!-- Amazon Email -->
         <label for="email">Amazon Email:</label><br>
-        <input type="email" id="email" name="email" required><br><br>
+        <input type="email" id="email" name="email" placeholder="Enter your Amazon email" required><br><br>
 
+        <!-- Total Pages to Read -->
         <label for="pages">Total Pages to Read:</label><br>
-        <input type="number" id="pages" name="pages" required><br><br>
+        <input type="number" id="pages" name="pages" min="1" placeholder="Enter the number of pages" required><br><br>
 
+        <!-- Minimum Delay -->
         <label for="delay_min">Minimum Delay (seconds):</label><br>
-        <input type="number" id="delay_min" name="delay_min" required><br><br>
+        <input type="number" id="delay_min" name="delay_min" min="1" placeholder="Minimum delay between pages" required><br><br>
 
+        <!-- Maximum Delay -->
         <label for="delay_max">Maximum Delay (seconds):</label><br>
-        <input type="number" id="delay_max" name="delay_max" required><br><br>
+        <input type="number" id="delay_max" name="delay_max" min="1" placeholder="Maximum delay between pages" required><br><br>
 
+        <!-- Submit Button -->
         <button type="submit">Start Reading</button>
     </form>
 </body>
