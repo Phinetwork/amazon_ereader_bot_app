@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Reader Bot</title>
+</head>
+<body>
+    <h1>Amazon Reader Bot</h1>
+    <form action="/" method="POST">
+        <label for="email">Amazon Email:</label><br>
+        <input type="email" id="email" name="email" required><br><br>
+
+        <label for="pages">Total Pages to Read:</label><br>
+        <input type="number" id="pages" name="pages" required><br><br>
+
+        <label for="delay_min">Minimum Delay (seconds):</label><br>
+        <input type="number" id="delay_min" name="delay_min" required><br><br>
+
+        <label for="delay_max">Maximum Delay (seconds):</label><br>
+        <input type="number" id="delay_max" name="delay_max" required><br><br>
+
+        <button type="submit">Start Reading</button>
+    </form>
+</body>
+</html>
