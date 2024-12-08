@@ -34,14 +34,19 @@
         td {
             background-color: #fff;
         }
-        a {
+        a, button {
             display: inline-block;
             margin-top: 20px;
             text-decoration: none;
             color: #007bff;
             font-weight: bold;
+            background-color: #f9f9f9;
+            padding: 10px 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
         }
-        a:hover {
+        a:hover, button:hover {
             text-decoration: underline;
         }
         .status {
@@ -109,5 +114,7 @@
 
     <!-- Navigation -->
     <a href="/">Return to Home</a>
+    <button onclick="window.location.reload();">Refresh Progress</button>
+    <button onclick="window.open('/start_bot', '_blank');">Start Bot</button>
 </body>
 </html>

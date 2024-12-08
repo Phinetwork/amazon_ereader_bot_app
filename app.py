@@ -97,13 +97,13 @@ def home():
 
             # Initialize Chrome options
             options = uc.ChromeOptions()
-            options.add_argument("--headless")  # Use headless mode in Render
+            options.add_argument("--headless")  # Use headless mode for server deployment
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--start-maximized")
             options.add_argument("--disable-blink-features=AutomationControlled")
-            options.binary_location = "/opt/render/project/.render/chrome"  # Specify binary location for Render
-            
+            options.binary_location = os.getenv("GOOGLE_CHROME_BIN", default="/usr/bin/google-chrome")
+
             try:
                 driver = uc.Chrome(options=options)
             except Exception as e:
@@ -161,10 +161,18 @@ def dashboard():
     # Render the dashboard
     return render_template(
         "dashboard.html",
-        progress=progress,
+        progress={current_email: current_progress} if current_email else {},
         live_progress=live_progress,
         current_progress=current_progress,
     )
+
+
+@app.route("/start_bot", methods=["GET"])
+def start_bot():
+    """Manually start the bot via dashboard button."""
+    global live_progress
+    live_progress["status"] = "Starting Bot..."
+    return redirect(url_for("dashboard"))
 
 
 if __name__ == "__main__":
