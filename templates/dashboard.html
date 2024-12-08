@@ -10,6 +10,7 @@
             margin: 20px;
             padding: 20px;
             background-color: #f4f4f4;
+            line-height: 1.6;
         }
         h1, h2 {
             color: #333;
@@ -44,10 +45,23 @@
             text-decoration: underline;
         }
         .status {
-            padding: 10px;
+            padding: 15px;
             border: 1px solid #ddd;
             background-color: #fef6c4;
             border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        @media (max-width: 600px) {
+            table {
+                font-size: 14px;
+            }
+            th, td {
+                padding: 8px;
+            }
         }
     </style>
 </head>
@@ -57,8 +71,14 @@
     <!-- Live Progress -->
     <h2>Live Progress</h2>
     <div class="status">
-        <p><strong>Status:</strong> {{ live_progress.status }}</p>
-        <p><strong>Current Email:</strong> {{ live_progress.email }}</p>
+        <p><strong>Status:</strong> 
+            {% if "Error" in live_progress.status %}
+                <span class="error">{{ live_progress.status }}</span>
+            {% else %}
+                {{ live_progress.status }}
+            {% endif %}
+        </p>
+        <p><strong>Current Email:</strong> {{ live_progress.email or "N/A" }}</p>
         <p><strong>Pages Read in This Session:</strong> {{ live_progress.pages_read }}</p>
     </div>
 
@@ -72,12 +92,18 @@
             </tr>
         </thead>
         <tbody>
-            {% for email, pages in progress.items() %}
-            <tr>
-                <td>{{ email }}</td>
-                <td>{{ pages }}</td>
-            </tr>
-            {% endfor %}
+            {% if progress %}
+                {% for email, pages in progress.items() %}
+                <tr>
+                    <td>{{ email }}</td>
+                    <td>{{ pages }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="2">No progress recorded yet.</td>
+                </tr>
+            {% endif %}
         </tbody>
     </table>
 
