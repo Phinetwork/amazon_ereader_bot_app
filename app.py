@@ -9,10 +9,16 @@ import os
 import json
 import shutil
 import threading
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Flask app setup
 app = Flask(__name__)
-app.secret_key = "fb8d91a4c77b6d219d0d3aa8b5b14458e5fbe7a53c6e10ef3c34b867729a5945"  # Replace with a secure key
+
+# Retrieve secret key from environment
+app.secret_key = os.getenv("FLASK_SECRET_KEY")  # Use the key from .env file
 
 # Configure logging
 log_dir = "logs"
