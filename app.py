@@ -25,6 +25,9 @@ live_progress = {
     "email": None,
 }
 
+# Store driver globally to reuse between requests
+driver = None
+
 # Function to update progress
 def update_progress(email, pages_read):
     """Save the progress to a file."""
@@ -50,9 +53,9 @@ def update_progress(email, pages_read):
 
 
 # Function to simulate reading
-def simulate_reading(driver, total_pages, delay_range, email):
+def simulate_reading(total_pages, delay_range, email):
     """Simulate reading by flipping pages one by one."""
-    global live_progress
+    global live_progress, driver
     live_progress["status"] = "Reading"
 
     try:
@@ -82,7 +85,7 @@ def simulate_reading(driver, total_pages, delay_range, email):
 @app.route("/", methods=["GET", "POST"])
 def home():
     """Main page where users input settings."""
-    global live_progress
+    global live_progress, driver
 
     if request.method == "POST":
         try:
@@ -123,11 +126,6 @@ def home():
             # Notify user to manually log in
             live_progress["status"] = "Waiting for manual login and book selection..."
             time.sleep(60)  # Allow the user to log in and select a book manually
-
-            # Start reading in a separate thread
-            threading.Thread(
-                target=simulate_reading, args=(driver, total_pages, (delay_min, delay_max), amazon_username)
-            ).start()
 
             return redirect(url_for("dashboard"))
         except ValueError as ve:
@@ -170,8 +168,17 @@ def dashboard():
 @app.route("/start_bot", methods=["GET"])
 def start_bot():
     """Manually start the bot via dashboard button."""
-    global live_progress
-    live_progress["status"] = "Starting Bot..."
+    global live_progress, driver
+
+    if live_progress["email"] and driver:
+        live_progress["status"] = "Starting Bot..."
+        threading.Thread(
+            target=simulate_reading,
+            args=(10, (5, 10), live_progress["email"]),
+        ).start()
+    else:
+        live_progress["status"] = "Error: Please log in and set up first."
+
     return redirect(url_for("dashboard"))
 
 

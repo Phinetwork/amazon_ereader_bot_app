@@ -7,13 +7,14 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
-            padding: 20px;
+            margin: 0;
+            padding: 0;
             background-color: #f9f9f9;
         }
         h1 {
             color: #333;
             text-align: center;
+            margin-top: 20px;
         }
         form {
             background: #fff;
@@ -21,26 +22,38 @@
             border: 1px solid #ddd;
             border-radius: 8px;
             max-width: 400px;
-            margin: auto;
+            margin: 20px auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         label {
             font-weight: bold;
+            display: block;
+            margin: 10px 0 5px;
         }
         input, button {
-            width: calc(100% - 20px);
-            margin: 10px 0;
+            width: 100%;
             padding: 10px;
+            margin: 5px 0 15px;
             border: 1px solid #ccc;
             border-radius: 4px;
+            box-sizing: border-box;
         }
         button {
             background-color: #007bff;
             color: #fff;
+            font-size: 16px;
             cursor: pointer;
             border: none;
+            transition: background-color 0.3s ease;
         }
         button:hover {
             background-color: #0056b3;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #777;
         }
     </style>
 </head>
@@ -48,27 +61,31 @@
     <h1>Amazon Reader Bot</h1>
     <form action="/" method="POST">
         <!-- Amazon Email -->
-        <label for="email">Amazon Email:</label><br>
-        <input type="email" id="email" name="email" placeholder="Enter your Amazon email" required><br><br>
+        <label for="email">Amazon Email:</label>
+        <input type="email" id="email" name="email" placeholder="Enter your Amazon email" required>
 
         <!-- Amazon Password -->
-        <label for="password">Amazon Password:</label><br>
-        <input type="password" id="password" name="password" placeholder="Enter your Amazon password" required><br><br>
+        <label for="password">Amazon Password:</label>
+        <input type="password" id="password" name="password" placeholder="Enter your Amazon password" required>
 
         <!-- Total Pages to Read -->
-        <label for="pages">Total Pages to Read:</label><br>
-        <input type="number" id="pages" name="pages" min="1" placeholder="Enter the number of pages" required><br><br>
+        <label for="pages">Total Pages to Read:</label>
+        <input type="number" id="pages" name="pages" min="1" placeholder="Enter the number of pages" required>
 
         <!-- Minimum Delay -->
-        <label for="delay_min">Minimum Delay (seconds):</label><br>
-        <input type="number" id="delay_min" name="delay_min" min="1" placeholder="Minimum delay between pages" required><br><br>
+        <label for="delay_min">Minimum Delay (seconds):</label>
+        <input type="number" id="delay_min" name="delay_min" min="1" placeholder="Minimum delay between pages" required>
 
         <!-- Maximum Delay -->
-        <label for="delay_max">Maximum Delay (seconds):</label><br>
-        <input type="number" id="delay_max" name="delay_max" min="1" placeholder="Maximum delay between pages" required><br><br>
+        <label for="delay_max">Maximum Delay (seconds):</label>
+        <input type="number" id="delay_max" name="delay_max" min="1" placeholder="Maximum delay between pages" required>
 
         <!-- Submit Button -->
         <button type="submit">Start Reading</button>
     </form>
+
+    <div class="footer">
+        <p>&copy; 2024 Amazon Reader Bot. All rights reserved.</p>
+    </div>
 </body>
 </html>
