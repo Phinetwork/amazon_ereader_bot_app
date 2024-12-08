@@ -90,6 +90,7 @@
             {% endif %}
         </p>
         <p><strong>Current Email:</strong> {{ live_progress.email or "N/A" }}</p>
+        <p><strong>Current Book:</strong> {{ live_progress.current_book or "N/A" }}</p>
         <p><strong>Pages Read in This Session:</strong> {{ live_progress.pages_read }}</p>
     </div>
 
@@ -99,20 +100,22 @@
         <thead>
             <tr>
                 <th>Email</th>
-                <th>Pages Read</th>
+                <th>Total Pages Read</th>
+                <th>Books Read</th>
             </tr>
         </thead>
         <tbody>
             {% if progress %}
-                {% for email, pages in progress.items() %}
+                {% for email, data in progress.items() %}
                 <tr>
                     <td>{{ email }}</td>
-                    <td>{{ pages }}</td>
+                    <td>{{ data.total_pages }}</td>
+                    <td>{{ data.books_read }}</td>
                 </tr>
                 {% endfor %}
             {% else %}
                 <tr>
-                    <td colspan="2">No progress recorded yet.</td>
+                    <td colspan="3">No progress recorded yet.</td>
                 </tr>
             {% endif %}
         </tbody>
