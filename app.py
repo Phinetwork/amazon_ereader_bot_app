@@ -11,8 +11,7 @@ import threading
 
 # Flask app setup
 app = Flask(__name__)
-app.secret_key = "fb8d91a4c77b6d219d0d3aa8b5b14458e5fbe7a53c6e10ef3c34b867729a5945
-"  # Replace with a secure key for session handling
+app.secret_key = "fb8d91a4c77b6d219d0d3aa8b5b14458e5fbe7a53c6e10ef3c34b867729a5945"  # Replace with a secure key
 
 # Configure logging
 log_dir = "logs"
@@ -20,16 +19,15 @@ os.makedirs(log_dir, exist_ok=True)
 log_file = os.path.join(log_dir, "bot_activity.log")
 logging.basicConfig(filename=log_file, level=logging.INFO, format="%(asctime)s - %(message)s")
 
-# Global state to store live progress
+# Global variables
 progress_file = "progress.json"
-drivers = {}  # Store Selenium drivers per user session
+drivers = {}  # Store WebDriver instances per user session
 
 
-# Function to update progress
+# Function to update reading progress
 def update_progress(email, pages_read, book):
-    """Save the progress to a file."""
     try:
-        # Load existing progress or initialize new
+        # Load progress data or initialize a new structure
         if os.path.exists(progress_file):
             with open(progress_file, "r") as f:
                 progress = json.load(f)
@@ -41,11 +39,9 @@ def update_progress(email, pages_read, book):
             progress[email] = {"total_pages": 0, "books_read": {}}
 
         progress[email]["total_pages"] += pages_read
-        progress[email]["books_read"][book] = (
-            progress[email]["books_read"].get(book, 0) + pages_read
-        )
+        progress[email]["books_read"][book] = progress[email]["books_read"].get(book, 0) + pages_read
 
-        # Save updated progress back to the file
+        # Save progress to file
         with open(progress_file, "w") as f:
             json.dump(progress, f, indent=4)
 
@@ -55,7 +51,6 @@ def update_progress(email, pages_read, book):
 
 # Function to simulate reading
 def simulate_reading(email, book, total_pages, delay_range):
-    """Simulate reading by flipping pages one by one."""
     try:
         driver = drivers.get(email)
         if not driver:
@@ -72,27 +67,27 @@ def simulate_reading(email, book, total_pages, delay_range):
             delay = random.randint(*delay_range)
             time.sleep(delay)
 
-            # Update progress after flipping each page
+            # Update progress
             update_progress(email, 1, book)
 
     except Exception as e:
-        logging.error(f"Error during reading simulation: {e}")
+        logging.error(f"Error during reading simulation for {email}: {e}")
 
 
+# Route: Home (Setup)
 @app.route("/", methods=["GET", "POST"])
 def home():
-    """Main page where users input settings."""
     if request.method == "POST":
         email = request.form.get("email")
-        password = request.form.get("password")  # Optional for manual login
         total_pages = int(request.form.get("pages", 0))
         delay_min = int(request.form.get("delay_min", 0))
         delay_max = int(request.form.get("delay_max", 0))
 
+        # Validate input
         if not email or total_pages <= 0 or delay_min <= 0 or delay_max <= 0:
             return redirect(url_for("dashboard", error="Invalid input values."))
 
-        # Initialize session data
+        # Save session data
         session["email"] = email
         session["pages"] = total_pages
         session["delay_min"] = delay_min
@@ -106,14 +101,15 @@ def home():
             options.add_argument("--disable-blink-features=AutomationControlled")
             options.binary_location = os.getenv("GOOGLE_CHROME_BIN", default="/usr/bin/google-chrome")
 
-            drivers[email] = uc.Chrome(options=options)
+            driver = uc.Chrome(options=options)
+            drivers[email] = driver
 
             # Open Kindle Cloud Reader
-            drivers[email].get("https://read.amazon.com")
+            driver.get("https://read.amazon.com")
             logging.info(f"{email} - Opened Kindle Cloud Reader.")
 
-            # Allow the user to log in and choose a book
-            session["current_book"] = select_book(drivers[email])
+            # Select a book
+            session["current_book"] = select_book(driver)
             return redirect(url_for("dashboard"))
         except Exception as e:
             logging.error(f"Error initializing WebDriver for {email}: {e}")
@@ -122,37 +118,30 @@ def home():
     return render_template("index.html")
 
 
+# Function to dynamically select a book
 def select_book(driver):
-    """Logic to dynamically select a book after login."""
     try:
-        # Wait for the Kindle library to load
-        time.sleep(10)  # Adjust the delay as needed
-
-        # Locate books in the library and click the first available book
+        time.sleep(10)  # Wait for Kindle library to load
         books = driver.find_elements(By.CSS_SELECTOR, ".kindle-library-book")
         if not books:
             raise Exception("No books found in the library.")
-
-        books[0].click()  # Click the first book
-        logging.info("Selected the first book in the Kindle library.")
-
-        # Extract the book title
+        books[0].click()  # Select the first book
+        logging.info("Selected the first book in the library.")
         book_title = driver.find_element(By.CSS_SELECTOR, ".book-title").text
         logging.info(f"Book selected: {book_title}")
-
         return book_title
     except Exception as e:
         logging.error(f"Failed to select a book: {e}")
         return "Unknown Book"
 
 
+# Route: Dashboard
 @app.route("/dashboard")
 def dashboard():
-    """Display the user's reading progress and live status."""
     email = session.get("email", "N/A")
     current_book = session.get("current_book", "N/A")
 
-    # Load progress from the file
+    # Load progress data
     if os.path.exists(progress_file):
         with open(progress_file, "r") as f:
             progress = json.load(f)
@@ -169,9 +158,9 @@ def dashboard():
     )
 
 
+# Route: Start Bot
 @app.route("/start_bot")
 def start_bot():
-    """Start the bot for the logged-in user."""
     email = session.get("email")
     current_book = session.get("current_book")
 
@@ -180,19 +169,14 @@ def start_bot():
 
     threading.Thread(
         target=simulate_reading,
-        args=(
-            email,
-            current_book,
-            session.get("pages", 0),
-            (session.get("delay_min", 5), session.get("delay_max", 10)),
-        ),
+        args=(email, current_book, session.get("pages", 0), (session.get("delay_min", 5), session.get("delay_max", 10))),
     ).start()
     return redirect(url_for("dashboard"))
 
 
+# Route: Logout
 @app.route("/logout")
 def logout():
-    """Clear the session and clean up resources."""
     email = session.get("email")
     if email and email in drivers:
         drivers[email].quit()
