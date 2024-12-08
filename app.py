@@ -23,118 +23,165 @@ live_progress = {
     "status": "Idle",
     "pages_read": 0,
     "email": None,
-    "current_book": None,
 }
 
-progress_data = {}  # Store user progress (simulates a database)
+# Store driver globally to reuse between requests
+driver = None
 
-
+# Function to update progress
 def update_progress(email, pages_read):
-    """Update progress for a specific user."""
-    if email not in progress_data:
-        progress_data[email] = {"total_pages": 0, "books_read": 0}
-    progress_data[email]["total_pages"] += pages_read
+    """Save the progress to a file."""
+    progress_file = "progress.json"
+
+    try:
+        # Load existing progress or initialize new
+        if os.path.exists(progress_file):
+            with open(progress_file, "r") as f:
+                progress = json.load(f)
+        else:
+            progress = {}
+
+        # Update user's progress
+        progress[email] = progress.get(email, 0) + pages_read
+
+        # Save updated progress back to the file
+        with open(progress_file, "w") as f:
+            json.dump(progress, f, indent=4)
+
+    except Exception as e:
+        logging.error(f"Failed to update progress: {e}")
 
 
-def simulate_reading(driver, total_pages, delay_range, email):
-    """Simulate reading for the given book."""
-    global live_progress
+# Function to simulate reading
+def simulate_reading(total_pages, delay_range, email):
+    """Simulate reading by flipping pages one by one."""
+    global live_progress, driver
     live_progress["status"] = "Reading"
 
     try:
         for page in range(total_pages):
-            # Simulate reading by flipping pages
+            live_progress["pages_read"] += 1
+            logging.info(f"Reading page {page + 1}")
+            
+            # Flip the page
             body = driver.find_element(By.TAG_NAME, "body")
             body.send_keys(Keys.RIGHT)
-
-            # Delay between page flips
+            
+            # Simulate delay
             delay = random.randint(*delay_range)
+            logging.info(f"Waiting {delay} seconds before flipping to the next page...")
             time.sleep(delay)
 
-            # Update progress
-            live_progress["pages_read"] += 1
+            # Update progress after flipping each page
             update_progress(email, 1)
 
     except Exception as e:
-        logging.error(f"Error during reading: {e}")
+        logging.error(f"Error encountered while reading: {e}")
         live_progress["status"] = f"Error: {e}"
     finally:
         live_progress["status"] = "Idle"
 
 
-def start_bot_task(email, password, book_name, total_pages, delay_min, delay_max):
-    """Start the bot task."""
-    global live_progress
-    live_progress["status"] = "Starting Bot..."
-    live_progress["email"] = email
-    live_progress["current_book"] = book_name
-    live_progress["pages_read"] = 0
-
-    # Configure Chrome options
-    options = uc.ChromeOptions()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.binary_location = os.getenv("GOOGLE_CHROME_BIN", default="/usr/bin/google-chrome")
-
-    try:
-        driver = uc.Chrome(options=options)
-        driver.get("https://read.amazon.com")
-        logging.info("Opened Kindle Cloud Reader.")
-
-        # Log in to Amazon
-        driver.find_element(By.ID, "ap_email").send_keys(email)
-        driver.find_element(By.ID, "ap_password").send_keys(password)
-        driver.find_element(By.ID, "signInSubmit").click()
-        time.sleep(5)  # Wait for login to complete
-
-        # Select the book
-        book_element = driver.find_element(By.XPATH, f"//span[text()='{book_name}']")
-        book_element.click()
-        time.sleep(5)  # Wait for the book to load
-
-        # Start reading
-        simulate_reading(driver, total_pages, (delay_min, delay_max), email)
-
-        # Mark book as read
-        progress_data[email]["books_read"] += 1
-
-    except Exception as e:
-        logging.error(f"Bot failed: {e}")
-        live_progress["status"] = f"Error: {e}"
-    finally:
-        driver.quit()
-
-
 @app.route("/", methods=["GET", "POST"])
 def home():
-    """Render the home page."""
+    """Main page where users input settings."""
+    global live_progress, driver
+
     if request.method == "POST":
-        # Get user inputs
-        email = request.form["email"]
-        password = request.form["password"]
-        book_name = request.form["book_name"]
-        total_pages = int(request.form["pages"])
-        delay_min = int(request.form["delay_min"])
-        delay_max = int(request.form["delay_max"])
+        try:
+            # Collect user inputs
+            amazon_username = request.form.get("email")
+            total_pages = int(request.form.get("pages", 0))
+            delay_min = int(request.form.get("delay_min", 0))
+            delay_max = int(request.form.get("delay_max", 0))
 
-        # Start the bot in a separate thread
-        threading.Thread(
-            target=start_bot_task,
-            args=(email, password, book_name, total_pages, delay_min, delay_max),
-        ).start()
+            if not amazon_username or total_pages <= 0 or delay_min <= 0 or delay_max <= 0:
+                raise ValueError("Invalid input values.")
 
-        return redirect(url_for("dashboard"))
+            # Initialize Chrome options
+            options = uc.ChromeOptions()
+            options.add_argument("--headless")  # Use headless mode for server deployment
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--start-maximized")
+            options.add_argument("--disable-blink-features=AutomationControlled")
+            options.binary_location = os.getenv("GOOGLE_CHROME_BIN", default="/usr/bin/google-chrome")
+
+            try:
+                driver = uc.Chrome(options=options)
+            except Exception as e:
+                logging.error(f"WebDriver initialization failed: {e}")
+                live_progress["status"] = f"WebDriver Error: {e}"
+                return redirect(url_for("dashboard"))
+
+            # Update live progress
+            live_progress["status"] = "Opening Kindle Cloud Reader"
+            live_progress["email"] = amazon_username
+            live_progress["pages_read"] = 0
+
+            # Open Kindle Cloud Reader
+            driver.get("https://read.amazon.com")
+            logging.info("Opened Kindle Cloud Reader.")
+
+            # Notify user to manually log in
+            live_progress["status"] = "Waiting for manual login and book selection..."
+            time.sleep(60)  # Allow the user to log in and select a book manually
+
+            return redirect(url_for("dashboard"))
+        except ValueError as ve:
+            logging.error(f"Validation error: {ve}")
+            live_progress["status"] = "Validation Error: Check your input."
+            return redirect(url_for("dashboard"))
+        except Exception as e:
+            logging.error(f"Critical error encountered: {e}")
+            live_progress["status"] = f"Error: {e}"
+            return redirect(url_for("dashboard"))
 
     return render_template("index.html")
 
 
 @app.route("/dashboard", methods=["GET"])
 def dashboard():
-    """Display the reading progress."""
-    return render_template("dashboard.html", live_progress=live_progress, progress=progress_data)
+    """Display the user's reading progress and live status."""
+    progress_file = "progress.json"
+
+    # Load progress from the file
+    if os.path.exists(progress_file):
+        with open(progress_file, "r") as f:
+            progress = json.load(f)
+    else:
+        progress = {}
+
+    # Display only current user's progress
+    current_email = live_progress.get("email")
+    current_progress = progress.get(current_email, 0)
+
+    # Render the dashboard
+    return render_template(
+        "dashboard.html",
+        progress={current_email: current_progress} if current_email else {},
+        live_progress=live_progress,
+        current_progress=current_progress,
+    )
+
+
+@app.route("/start_bot", methods=["GET"])
+def start_bot():
+    """Manually start the bot via dashboard button."""
+    global live_progress, driver
+
+    if live_progress["email"] and driver:
+        live_progress["status"] = "Starting Bot..."
+        threading.Thread(
+            target=simulate_reading,
+            args=(10, (5, 10), live_progress["email"]),
+        ).start()
+    else:
+        live_progress["status"] = "Error: Please log in and set up first."
+
+    return redirect(url_for("dashboard"))
 
 
 if __name__ == "__main__":
+    # Bind to all network interfaces and set port for production
     app.run(host="0.0.0.0", port=8080)
