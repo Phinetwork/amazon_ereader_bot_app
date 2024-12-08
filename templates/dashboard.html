@@ -94,6 +94,10 @@
         button.update-settings:hover {
             background-color: #218838;
         }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
         @media (max-width: 600px) {
             table {
                 font-size: 14px;
@@ -106,6 +110,11 @@
 </head>
 <body>
     <h1>Reading Progress Dashboard</h1>
+
+    <!-- Error Display -->
+    {% if error %}
+    <div class="error-message">{{ error }}</div>
+    {% endif %}
 
     <!-- Live Progress -->
     <h2>Live Progress</h2>
@@ -184,15 +193,15 @@
     </div>
 
     <!-- Navigation -->
-    <a href="/">Return to Home</a>
-    <button onclick="refreshProgress()">Refresh Progress</button>
+    <a href="/" aria-label="Return to Home">Return to Home</a>
+    <button onclick="refreshProgress()" aria-label="Refresh Progress">Refresh Progress</button>
     {% if live_progress.status == "Reading" %}
     <form action="/stop_bot" method="GET" style="display: inline;">
-        <button type="submit">Stop Bot</button>
+        <button type="submit" aria-label="Stop Bot">Stop Bot</button>
     </form>
     {% else %}
     <form action="/start_bot" method="GET" style="display: inline;">
-        <button type="submit">Start Bot</button>
+        <button type="submit" aria-label="Start Bot">Start Bot</button>
     </form>
     {% endif %}
 

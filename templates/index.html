@@ -63,6 +63,7 @@
             color: red;
             font-size: 14px;
             margin-bottom: 15px;
+            text-align: center;
         }
         .footer {
             text-align: center;
@@ -82,20 +83,20 @@
     <h1>Amazon Reader Bot</h1>
 
     <div class="info">
-        <p>Please provide your Amazon account credentials to log in. The bot will read books from your Kindle library based on the number of pages specified. Ensure the information is accurate.</p>
+        <p>Log in to your Amazon account to start using the bot. Once logged in, you can configure settings on the dashboard.</p>
     </div>
 
     <!-- Error Message Placeholder -->
-    <div id="error-message" class="error"></div>
+    {% if error %}
+    <div class="error">
+        {{ error }}
+    </div>
+    {% endif %}
 
     <!-- Loading Indicator -->
     <div id="loading-indicator" class="loading">Logging in... Please wait.</div>
 
     <form action="/" method="POST" onsubmit="showLoading()">
-        <!-- CSRF Token (Django/Flask or your framework) -->
-        <!-- Replace {{ csrf_token }} with actual token -->
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-
         <!-- Amazon Email -->
         <label for="email">Amazon Email:</label>
         <input type="email" id="email" name="email" placeholder="Enter your Amazon email" required>
@@ -104,20 +105,8 @@
         <label for="password">Amazon Password:</label>
         <input type="password" id="password" name="password" placeholder="Enter your Amazon password" required>
 
-        <!-- Total Pages to Read -->
-        <label for="pages">Total Pages to Read:</label>
-        <input type="number" id="pages" name="pages" min="1" placeholder="Enter the number of pages" required>
-
-        <!-- Minimum Delay -->
-        <label for="delay_min">Minimum Delay (seconds):</label>
-        <input type="number" id="delay_min" name="delay_min" min="1" placeholder="Minimum delay between pages" required>
-
-        <!-- Maximum Delay -->
-        <label for="delay_max">Maximum Delay (seconds):</label>
-        <input type="number" id="delay_max" name="delay_max" min="1" placeholder="Maximum delay between pages" required>
-
         <!-- Submit Button -->
-        <button type="submit" aria-label="Start Reading">Start Reading</button>
+        <button type="submit" aria-label="Login">Login</button>
     </form>
 
     <div class="footer">

@@ -11,7 +11,7 @@ import threading
 
 # Flask app setup
 app = Flask(__name__)
-app.secret_key = "fb8d91a4c77b6d219d0d3aa8b5b14458e5fbe7a53c6e10ef3c34b867729a5945"  # Replace with a secure key
+app.secret_key = "your_secure_key"  # Replace with a secure key
 
 # Configure logging
 log_dir = "logs"
@@ -19,7 +19,7 @@ os.makedirs(log_dir, exist_ok=True)
 log_file = os.path.join(log_dir, "bot_activity.log")
 logging.basicConfig(filename=log_file, level=logging.INFO, format="%(asctime)s - %(message)s")
 
-# Global state to store live progress
+# Global state
 progress_file = "progress.json"
 drivers = {}  # Store Selenium drivers per user session
 
@@ -74,7 +74,7 @@ def simulate_reading(email, book, total_pages, delay_range):
 
 @app.route("/", methods=["GET", "POST"])
 def home():
-    """Main page for user login."""
+    """Login page."""
     if request.method == "POST":
         email = request.form.get("email")
 
@@ -82,9 +82,9 @@ def home():
             return render_template("index.html", error="Email is required.")
 
         session["email"] = email
-        session["pages"] = 0  # Default value; updated on dashboard
-        session["delay_min"] = 1  # Default value; updated on dashboard
-        session["delay_max"] = 5  # Default value; updated on dashboard
+        session["pages"] = 0  # Default; updated later in the dashboard
+        session["delay_min"] = 1  # Default; updated later in the dashboard
+        session["delay_max"] = 5  # Default; updated later in the dashboard
 
         try:
             options = uc.ChromeOptions()
@@ -107,7 +107,7 @@ def home():
 
 
 def select_book(driver):
-    """Logic to dynamically select a book."""
+    """Select a book."""
     try:
         time.sleep(10)
         books = driver.find_elements(By.CSS_SELECTOR, ".kindle-library-book")
@@ -124,7 +124,7 @@ def select_book(driver):
 
 @app.route("/dashboard", methods=["GET", "POST"])
 def dashboard():
-    """Display reading progress and live status."""
+    """Dashboard."""
     email = session.get("email", "N/A")
     current_book = session.get("current_book", "N/A")
 
@@ -135,15 +135,14 @@ def dashboard():
             pages = int(request.form.get("pages", 0))
 
             if delay_min <= 0 or delay_max <= 0 or delay_min > delay_max or pages <= 0:
-                return redirect(url_for("dashboard", error="Invalid input values."))
+                return render_template("dashboard.html", error="Invalid input values.")
 
             session["delay_min"] = delay_min
             session["delay_max"] = delay_max
             session["pages"] = pages
-            logging.info(f"Settings updated: delay_min={delay_min}, delay_max={delay_max}, pages={pages}")
         except Exception as e:
             logging.error(f"Error updating settings: {e}")
-            return redirect(url_for("dashboard", error="Failed to update settings."))
+            return render_template("dashboard.html", error="Failed to update settings.")
 
     if os.path.exists(progress_file):
         with open(progress_file, "r") as f:
@@ -165,7 +164,7 @@ def dashboard():
 
 @app.route("/start_bot")
 def start_bot():
-    """Start the reading bot."""
+    """Start the bot."""
     email = session.get("email")
     current_book = session.get("current_book")
     if not email or email not in drivers:
