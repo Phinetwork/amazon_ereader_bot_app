@@ -4,16 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: #fff;
+        }
+        td {
+            background-color: #fff;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .status {
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #fef6c4;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 <body>
     <h1>Reading Progress Dashboard</h1>
-    <h2>Live Progress</h2>
-    <p>Status: {{ live_progress.status }}</p>
-    <p>Current Email: {{ live_progress.email }}</p>
-    <p>Pages Read in This Session: {{ live_progress.pages_read }}</p>
 
+    <!-- Live Progress -->
+    <h2>Live Progress</h2>
+    <div class="status">
+        <p><strong>Status:</strong> {{ live_progress.status }}</p>
+        <p><strong>Current Email:</strong> {{ live_progress.email }}</p>
+        <p><strong>Pages Read in This Session:</strong> {{ live_progress.pages_read }}</p>
+    </div>
+
+    <!-- Overall Progress -->
     <h2>Overall Progress</h2>
-    <table border="1">
+    <table>
         <thead>
             <tr>
                 <th>Email</th>
@@ -29,6 +80,8 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <!-- Navigation -->
     <a href="/">Return to Home</a>
 </body>
 </html>

@@ -48,6 +48,7 @@ def update_progress(email, pages_read):
     except Exception as e:
         logging.error(f"Failed to update progress: {e}")
 
+
 # Function to simulate reading
 def simulate_reading(driver, total_pages, delay_range, email):
     """Simulate reading by flipping pages one by one."""
@@ -101,7 +102,14 @@ def home():
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--start-maximized")
             options.add_argument("--disable-blink-features=AutomationControlled")
-            driver = uc.Chrome(options=options)
+            options.binary_location = "/opt/render/project/.render/chrome"  # Specify binary location for Render
+            
+            try:
+                driver = uc.Chrome(options=options)
+            except Exception as e:
+                logging.error(f"WebDriver initialization failed: {e}")
+                live_progress["status"] = f"WebDriver Error: {e}"
+                return redirect(url_for("dashboard"))
 
             # Update live progress
             live_progress["status"] = "Opening Kindle Cloud Reader"
@@ -146,8 +154,17 @@ def dashboard():
     else:
         progress = {}
 
-    # Render the dashboard with live progress and overall stats
-    return render_template("dashboard.html", progress=progress, live_progress=live_progress)
+    # Display only current user's progress
+    current_email = live_progress.get("email")
+    current_progress = progress.get(current_email, 0)
+
+    # Render the dashboard
+    return render_template(
+        "dashboard.html",
+        progress=progress,
+        live_progress=live_progress,
+        current_progress=current_progress,
+    )
 
 
 if __name__ == "__main__":
