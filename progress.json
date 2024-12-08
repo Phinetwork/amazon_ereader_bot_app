@@ -1,3 +1,15 @@
 {
-    "bjklock.com@gmail.com": 3
+    "user1@example.com": {
+        "total_pages": 120,
+        "books_read": {
+            "Book Title 1": 80,
+            "Book Title 2": 40
+        }
+    },
+    "user2@example.com": {
+        "total_pages": 200,
+        "books_read": {
+            "Book Title A": 200
+        }
+    }
 }

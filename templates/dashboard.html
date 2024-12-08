@@ -64,6 +64,10 @@
             color: green;
             font-weight: bold;
         }
+        .refreshing {
+            margin-top: 10px;
+            color: #555;
+        }
         @media (max-width: 600px) {
             table {
                 font-size: 14px;
@@ -110,7 +114,11 @@
                 <tr>
                     <td>{{ email }}</td>
                     <td>{{ data.total_pages }}</td>
-                    <td>{{ data.books_read }}</td>
+                    <td>
+                        {% for book, pages in data.books_read.items() %}
+                            <strong>{{ book }}:</strong> {{ pages }} pages<br>
+                        {% endfor %}
+                    </td>
                 </tr>
                 {% endfor %}
             {% else %}
@@ -123,9 +131,26 @@
 
     <!-- Navigation -->
     <a href="/">Return to Home</a>
-    <button onclick="window.location.reload();">Refresh Progress</button>
+    <button onclick="refreshProgress()">Refresh Progress</button>
+    {% if live_progress.status == "Reading" %}
+    <form action="/stop_bot" method="GET" style="display: inline;">
+        <button type="submit">Stop Bot</button>
+    </form>
+    {% else %}
     <form action="/start_bot" method="GET" style="display: inline;">
         <button type="submit">Start Bot</button>
     </form>
+    {% endif %}
+
+    <!-- Refresh Feedback -->
+    <p id="refreshing" class="refreshing" style="display: none;">Refreshing progress...</p>
+
+    <!-- JavaScript -->
+    <script>
+        function refreshProgress() {
+            document.getElementById('refreshing').style.display = 'block';
+            setTimeout(() => window.location.reload(), 1000);
+        }
+    </script>
 </body>
 </html>

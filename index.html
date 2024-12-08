@@ -49,20 +49,11 @@
         button:hover {
             background-color: #0056b3;
         }
-        .info {
-            background-color: #fef6c4;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #555;
-            text-align: center;
-        }
         .error {
             color: red;
-            font-size: 14px;
-            margin-bottom: 15px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
         }
         .footer {
             text-align: center;
@@ -70,39 +61,22 @@
             font-size: 14px;
             color: #777;
         }
-        .loading {
-            display: none;
-            text-align: center;
-            font-size: 14px;
-            color: #555;
-        }
     </style>
 </head>
 <body>
     <h1>Amazon Reader Bot</h1>
 
-    <div class="info">
-        <p>Please provide your Amazon account credentials to log in. The bot will read books from your Kindle library based on the number of pages specified. Ensure the information is accurate.</p>
+    <!-- Display Errors if Any -->
+    {% if error %}
+    <div class="error">
+        {{ error }}
     </div>
+    {% endif %}
 
-    <!-- Error Message Placeholder -->
-    <div id="error-message" class="error"></div>
-
-    <!-- Loading Indicator -->
-    <div id="loading-indicator" class="loading">Logging in... Please wait.</div>
-
-    <form action="/" method="POST" onsubmit="showLoading()">
-        <!-- CSRF Token (Django/Flask or your framework) -->
-        <!-- Replace {{ csrf_token }} with actual token -->
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-
+    <form action="/" method="POST">
         <!-- Amazon Email -->
         <label for="email">Amazon Email:</label>
         <input type="email" id="email" name="email" placeholder="Enter your Amazon email" required>
-
-        <!-- Amazon Password -->
-        <label for="password">Amazon Password:</label>
-        <input type="password" id="password" name="password" placeholder="Enter your Amazon password" required>
 
         <!-- Total Pages to Read -->
         <label for="pages">Total Pages to Read:</label>
@@ -110,25 +84,18 @@
 
         <!-- Minimum Delay -->
         <label for="delay_min">Minimum Delay (seconds):</label>
-        <input type="number" id="delay_min" name="delay_min" min="1" placeholder="Minimum delay between pages" required>
+        <input type="number" id="delay_min" name="delay_min" min="1" placeholder="Enter minimum delay between pages" required>
 
         <!-- Maximum Delay -->
         <label for="delay_max">Maximum Delay (seconds):</label>
-        <input type="number" id="delay_max" name="delay_max" min="1" placeholder="Maximum delay between pages" required>
+        <input type="number" id="delay_max" name="delay_max" min="1" placeholder="Enter maximum delay between pages" required>
 
         <!-- Submit Button -->
-        <button type="submit" aria-label="Start Reading">Start Reading</button>
+        <button type="submit">Start Reading</button>
     </form>
 
     <div class="footer">
         <p>&copy; 2024 Amazon Reader Bot. All rights reserved.</p>
     </div>
-
-    <!-- JavaScript for Dynamic Loading -->
-    <script>
-        function showLoading() {
-            document.getElementById('loading-indicator').style.display = 'block';
-        }
-    </script>
 </body>
 </html>
